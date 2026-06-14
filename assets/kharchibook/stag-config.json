@@ -1,0 +1,78 @@
+{
+  "app": {
+    "name": "auth-service",
+    "env": "stag",
+    "resetPasswordURL": "https://app.staging.example.com/reset-password"
+  },
+  "server": {
+    "port": 8080,
+    "readTimeout": "10s",
+    "writeTimeout": "10s",
+    "shutdownTimeout": "20s"
+  },
+  "store": {
+    "host": "postgres.staging.internal",
+    "port": 5432,
+    "user": "auth",
+    "password": "",
+    "name": "auth_service",
+    "sslMode": "require",
+    "maxOpenConns": 50,
+    "maxIdleConns": 10,
+    "connMaxLifetime": "30m",
+    "autoMigrate": false
+  },
+  "cache": {
+    "host": "redis.staging.internal",
+    "port": 6379,
+    "password": "",
+    "db": 0,
+    "tls": true
+  },
+  "token": {
+    "issuer": "auth-service",
+    "accessTokenTTL": "15m",
+    "refreshTokenTTL": "168h",
+    "privateKeyPath": "/etc/auth/keys/jwt_private.pem",
+    "publicKeyPath": "/etc/auth/keys/jwt_public.pem"
+  },
+  "security": {
+    "bcryptCost": 12,
+    "maxFailedAttempts": 5,
+    "accountLockDuration": "15m"
+  },
+  "otp": {
+    "length": 6,
+    "ttl": "2m",
+    "maxAttempts": 3,
+    "attemptWindow": "5m",
+    "resendCooldown": "30s"
+  },
+  "rateLimit": {
+    "loginMaxAttempts": 5,
+    "loginWindow": "5m",
+    "resetMaxAttempts": 3,
+    "resetWindow": "15m"
+  },
+  "msgQueue": {
+    "brokers": ["kafka.staging.internal:9092"],
+    "otpTopic": "auth.otp.notifications",
+    "auditTopic": "auth.audit.events",
+    "enabled": true
+  },
+  "email": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "username": "",
+    "password": "",
+    "from": "",
+    "fromName": "KharchiBook"
+  },
+  "oauth": {
+    "google": {
+      "clientID": "",
+      "clientSecret": "",
+      "redirectURL": "https://auth.staging.example.com/auth/oauth/google/callback"
+    }
+  }
+}

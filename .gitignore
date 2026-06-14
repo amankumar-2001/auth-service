@@ -1,0 +1,5 @@
+/bin/
+*.pem
+assets/keys/
+.env
+.DS_Store

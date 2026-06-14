@@ -1,0 +1,78 @@
+{
+  "app": {
+    "name": "auth-service",
+    "env": "dev",
+    "resetPasswordURL": "http://localhost:3000/reset-password"
+  },
+  "server": {
+    "port": 8080,
+    "readTimeout": "10s",
+    "writeTimeout": "10s",
+    "shutdownTimeout": "15s"
+  },
+  "store": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "auth",
+    "password": "auth",
+    "name": "auth_service",
+    "sslMode": "disable",
+    "maxOpenConns": 25,
+    "maxIdleConns": 5,
+    "connMaxLifetime": "30m",
+    "autoMigrate": true
+  },
+  "cache": {
+    "host": "localhost",
+    "port": 6379,
+    "password": "",
+    "db": 0,
+    "tls": false
+  },
+  "token": {
+    "issuer": "auth-service",
+    "accessTokenTTL": "15m",
+    "refreshTokenTTL": "720h",
+    "privateKeyPath": "assets/keys/jwt_private.pem",
+    "publicKeyPath": "assets/keys/jwt_public.pem"
+  },
+  "security": {
+    "bcryptCost": 12,
+    "maxFailedAttempts": 5,
+    "accountLockDuration": "15m"
+  },
+  "otp": {
+    "length": 6,
+    "ttl": "2m",
+    "maxAttempts": 3,
+    "attemptWindow": "5m",
+    "resendCooldown": "30s"
+  },
+  "rateLimit": {
+    "loginMaxAttempts": 5,
+    "loginWindow": "5m",
+    "resetMaxAttempts": 3,
+    "resetWindow": "15m"
+  },
+  "msgQueue": {
+    "brokers": ["localhost:9092"],
+    "otpTopic": "auth.otp.notifications",
+    "auditTopic": "auth.audit.events",
+    "enabled": false
+  },
+  "email": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "username": "",
+    "password": "",
+    "from": "",
+    "fromName": "KharchiBook"
+  },
+  "oauth": {
+    "google": {
+      "clientID": "",
+      "clientSecret": "",
+      "redirectURL": "http://localhost:8080/auth/oauth/google/callback"
+    }
+  }
+}
