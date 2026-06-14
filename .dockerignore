@@ -1,0 +1,20 @@
+# Secrets & local env — must never enter the build context / image
+.env
+.env.*
+!.env.example
+assets/keys/
+*.pem
+
+# VCS / tooling
+.git
+.github
+.vscode
+.DS_Store
+
+# Docs & local-only files
+*.md
+DEPLOYMENT.md
+
+# Build output
+bin/
+/out

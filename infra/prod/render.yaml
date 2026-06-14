@@ -1,0 +1,59 @@
+# Render Blueprint for kharchibook auth-service.
+# Deploy: push to GitHub, then in Render → New → Blueprint, point at this repo.
+# Secrets (sync:false) are entered once in the Render dashboard, never in git.
+services:
+  - type: web
+    name: kharchibook-auth-service
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    branch: main
+    region: singapore            # nearest to Neon ap-southeast-1 / Upstash
+    healthCheckPath: /healthz     # liveness only — does NOT touch DB/Redis
+    autoDeploy: true
+    envVars:
+      # --- non-secret runtime config ---
+      - key: ACTIVE_ENV
+        value: prod
+      - key: SERVER_PORT
+        value: "10000"            # match Render's injected PORT
+      - key: STORE_SSLMODE
+        value: require            # Neon requires TLS
+      - key: CACHE_TLS
+        value: "true"             # Upstash requires TLS
+      - key: MSGQUEUE_ENABLED
+        value: "false"            # no Kafka; OTP delivered via SMTP
+      - key: TOKEN_PRIVATEKEYPATH
+        value: /etc/secrets/jwt_private.pem
+      - key: TOKEN_PUBLICKEYPATH
+        value: /etc/secrets/jwt_public.pem
+
+      # --- secrets: set these in the Render dashboard (Environment tab) ---
+      # Postgres (Neon)
+      - key: STORE_HOST
+        sync: false
+      - key: STORE_PORT
+        sync: false
+      - key: STORE_USER
+        sync: false
+      - key: STORE_PASSWORD
+        sync: false
+      - key: STORE_NAME
+        sync: false
+      # Redis (Upstash)
+      - key: CACHE_HOST
+        sync: false
+      - key: CACHE_PORT
+        sync: false
+      - key: CACHE_PASSWORD
+        sync: false
+      # Email (Gmail SMTP) — host/port/fromName come from prod-config.json
+      - key: EMAIL_USERNAME
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      # Web app origin, used for password-reset links in emails
+      - key: APP_RESETPASSWORDURL
+        sync: false
