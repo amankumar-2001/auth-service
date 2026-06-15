@@ -61,6 +61,7 @@ func autoMigrate(db *gorm.DB) error {
 		&dao.RolePermission{},
 		&dao.UserRole{},
 		&dao.AuditLog{},
+		&dao.GmailCredential{},
 	)
 	if err != nil {
 		return fmt.Errorf("auto-migrate: %w", err)

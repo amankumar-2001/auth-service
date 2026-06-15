@@ -7,16 +7,19 @@
 package di
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/kharchibook/auth-service/config"
 	"github.com/kharchibook/auth-service/drivers"
 	"github.com/kharchibook/auth-service/pkg/domain/service"
+	"github.com/kharchibook/auth-service/pkg/infrastructure/blindindex"
 	"github.com/kharchibook/auth-service/pkg/infrastructure/cacherepo"
 	"github.com/kharchibook/auth-service/pkg/infrastructure/kms"
 	"github.com/kharchibook/auth-service/pkg/infrastructure/msgqueuerepo"
 	"github.com/kharchibook/auth-service/pkg/infrastructure/sqlrepo"
 	httptransport "github.com/kharchibook/auth-service/pkg/infrastructure/transport/http"
+	"github.com/kharchibook/auth-service/third_party/platlogger"
 )
 
 // InitializeApp builds the full application object graph from configuration.
@@ -36,6 +39,7 @@ func InitializeApp(cfg *config.Config) (AppInterface, error) {
 	sessionRepo := sqlrepo.NewSessionRepository(db)
 	rbacRepo := sqlrepo.NewRBACRepository(db)
 	auditRepo := sqlrepo.NewAuditRepository(db)
+	gmailCredRepo := sqlrepo.NewGmailCredentialRepository(db)
 
 	otpRepo := cacherepo.NewOTPRepository(rdb)
 	resetRepo := cacherepo.NewResetTokenRepository(rdb)
@@ -50,11 +54,13 @@ func InitializeApp(cfg *config.Config) (AppInterface, error) {
 		publisher = msgqueuerepo.NewStubPublisher()
 	}
 	googleClient := httptransport.NewGoogleOAuthClient(cfg.OAuth.Google)
+	gmailClient := httptransport.NewGmailOAuthClient(cfg.OAuth.Google)
 
 	encryptor, err := kms.NewLocalKMS("")
 	if err != nil {
 		return nil, fmt.Errorf("init kms: %w", err)
 	}
+	phoneHasher := blindindex.New(cfg.Internal.PhoneHashKey)
 
 	// --- domain services (built bottom-up) ---
 	passwordSvc := service.NewPasswordService(cfg.Security.BcryptCost)
@@ -65,10 +71,19 @@ func InitializeApp(cfg *config.Config) (AppInterface, error) {
 	auditSvc := service.NewAuditService(auditRepo)
 	rbacSvc := service.NewRBACService(rbacRepo)
 	accountSvc := service.NewAccountService(
-		userRepo, rbacSvc, encryptor,
+		userRepo, rbacSvc, encryptor, phoneHasher,
 		cfg.Security.MaxFailedAttempts, cfg.Security.AccountLockDuration,
 	)
+
+	// Backfill the phone blind index for any rows that predate the column.
+	// Best-effort and idempotent — a failure here must not block startup.
+	if n, err := accountSvc.BackfillPhoneHashes(context.Background()); err != nil {
+		platlogger.Warn("phone-hash backfill failed", "error", err)
+	} else if n > 0 {
+		platlogger.Info("phone-hash backfill complete", "updated", n)
+	}
 	sessionSvc := service.NewSessionService(sessionRepo, tokenSvc)
+	gmailSvc := service.NewGmailTokenService(gmailClient, gmailCredRepo, encryptor, cfg.Internal.APIKey)
 
 	devMode := cfg.App.Env == "dev"
 	otpSvc := service.NewOTPService(otpRepo, publisher, cfg.OTP, devMode)
@@ -96,6 +111,7 @@ func InitializeApp(cfg *config.Config) (AppInterface, error) {
 		tokenSvc:   tokenSvc,
 		rbacSvc:    rbacSvc,
 		accountSvc: accountSvc,
+		gmailSvc:   gmailSvc,
 		db:         db,
 		rdb:        rdb,
 	}, nil

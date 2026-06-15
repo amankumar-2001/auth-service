@@ -72,7 +72,9 @@
     "google": {
       "clientID": "",
       "clientSecret": "",
-      "redirectURL": "https://auth.staging.example.com/auth/oauth/google/callback"
+      "redirectURL": "https://auth.staging.example.com/auth/oauth/google/callback",
+      "gmailRedirectURL": "https://auth.staging.example.com/v1/public/auth/google/gmail/callback",
+      "gmailConnectedURL": "https://app.staging.example.com/settings/integrations?gmail=connected"
     }
   }
 }

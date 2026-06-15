@@ -19,6 +19,7 @@ type AppInterface interface {
 	TokenService() service.ITokenService
 	RBACService() service.IRBACService
 	AccountService() service.IAccountService
+	GmailTokenService() service.IGmailTokenService
 	// DB and Cache are exposed for health checks and graceful shutdown.
 	DB() *gorm.DB
 	Cache() *redis.Client
@@ -36,16 +37,18 @@ type app struct {
 	tokenSvc   service.ITokenService
 	rbacSvc    service.IRBACService
 	accountSvc service.IAccountService
+	gmailSvc   service.IGmailTokenService
 
 	db  *gorm.DB
 	rdb *redis.Client
 }
 
-func (a *app) Config() *config.Config                  { return a.cfg }
-func (a *app) AuthService() service.IAuthService       { return a.authSvc }
-func (a *app) TokenService() service.ITokenService     { return a.tokenSvc }
-func (a *app) RBACService() service.IRBACService       { return a.rbacSvc }
-func (a *app) AccountService() service.IAccountService { return a.accountSvc }
+func (a *app) Config() *config.Config                       { return a.cfg }
+func (a *app) AuthService() service.IAuthService            { return a.authSvc }
+func (a *app) TokenService() service.ITokenService          { return a.tokenSvc }
+func (a *app) RBACService() service.IRBACService            { return a.rbacSvc }
+func (a *app) AccountService() service.IAccountService      { return a.accountSvc }
+func (a *app) GmailTokenService() service.IGmailTokenService { return a.gmailSvc }
 func (a *app) DB() *gorm.DB                            { return a.db }
 func (a *app) Cache() *redis.Client                    { return a.rdb }
 

@@ -10,6 +10,7 @@ type SignUpRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Phone    string `json:"phone"`
+	Name     string `json:"name"`
 }
 
 func (r SignUpRequest) Validate() error {
@@ -17,5 +18,6 @@ func (r SignUpRequest) Validate() error {
 		validation.Field(&r.Email, validation.Required, is.Email),
 		validation.Field(&r.Password, passwordRules()...),
 		validation.Field(&r.Phone, validation.When(r.Phone != "", is.E164.Error("must be E.164 format, e.g. +919876543210"))),
+		validation.Field(&r.Name, validation.Length(0, 120)),
 	)
 }

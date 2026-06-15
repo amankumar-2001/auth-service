@@ -25,6 +25,7 @@ func NewProfileHandler(app di.AppInterface) *ProfileHandler {
 type meResponse struct {
 	UserID   int64    `json:"userId"`
 	Email    string   `json:"email"`
+	Name     string   `json:"name"`
 	Verified bool     `json:"verified"`
 	Provider string   `json:"provider"`
 	Roles    []string `json:"roles"`
@@ -56,6 +57,7 @@ func (h *ProfileHandler) Me(c *gin.Context) {
 	utils.WriteJSON(c.Writer, http.StatusOK, meResponse{
 		UserID:   user.ID,
 		Email:    user.Email,
+		Name:     user.Name,
 		Verified: user.Verified,
 		Provider: user.Provider,
 		Roles:    roles,

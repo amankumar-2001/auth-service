@@ -72,7 +72,13 @@
     "google": {
       "clientID": "",
       "clientSecret": "",
-      "redirectURL": "https://auth.example.com/auth/oauth/google/callback"
+      "redirectURL": "https://auth.example.com/auth/oauth/google/callback",
+      "gmailRedirectURL": "https://auth.example.com/v1/public/auth/google/gmail/callback",
+      "gmailConnectedURL": "https://app.example.com/settings/integrations?gmail=connected"
     }
+  },
+  "internal": {
+    "apiKey": "",
+    "phoneHashKey": ""
   }
 }

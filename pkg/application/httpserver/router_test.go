@@ -37,6 +37,8 @@ type stubRBAC struct{ service.IRBACService }
 
 func (stubRBAC) GetUserRoles(context.Context, int64) ([]string, error) { return []string{"user"}, nil }
 
+type stubGmail struct{ service.IGmailTokenService }
+
 // fakeApp implements di.AppInterface for HTTP-layer tests (no real datastores).
 type fakeApp struct {
 	tokens service.ITokenService
@@ -47,6 +49,7 @@ func (a *fakeApp) AuthService() service.IAuthService       { return stubAuth{} }
 func (a *fakeApp) TokenService() service.ITokenService     { return a.tokens }
 func (a *fakeApp) RBACService() service.IRBACService       { return stubRBAC{} }
 func (a *fakeApp) AccountService() service.IAccountService { return stubAccount{} }
+func (a *fakeApp) GmailTokenService() service.IGmailTokenService { return stubGmail{} }
 func (a *fakeApp) DB() *gorm.DB                            { return nil }
 func (a *fakeApp) Cache() *redis.Client                    { return nil }
 func (a *fakeApp) Close() error                            { return nil }

@@ -57,6 +57,8 @@ func NewRouter(app di.AppInterface) http.Handler {
 func mountV1(r *gin.RouterGroup, app di.AppInterface, guard *middleware.Guard) {
 	authHandler := publicrouter.NewAuthHandler(app)
 	profileHandler := publicrouter.NewProfileHandler(app)
+	internalHandler := publicrouter.NewInternalHandler(app)
+	gmailHandler := publicrouter.NewGmailHandler(app)
 
 	auth := r.Group("/public/auth")
 
@@ -68,4 +70,15 @@ func mountV1(r *gin.RouterGroup, app di.AppInterface, guard *middleware.Guard) {
 
 	// Protected endpoints (require a valid access token — guard stays visible here).
 	auth.GET("/me", guard.JWT, profileHandler.Me)
+
+	// Gmail connect: the user starts the flow authenticated (JWT); Google's
+	// callback is public (no JWT) but trusted via the signed state.
+	auth.GET("/google/gmail/connect", guard.JWT, gmailHandler.Connect)
+	auth.GET("/google/gmail/status", guard.JWT, gmailHandler.Status)
+	auth.GET("/google/gmail/callback", gmailHandler.Callback)
+
+	// Service-to-service endpoints, authenticated by the shared internal key.
+	internal := r.Group("/internal", guard.ServiceAuth(app.Config().Internal.APIKey))
+	internal.GET("/users/by-phone", internalHandler.UserByPhone)
+	internal.GET("/gmail/access-token", gmailHandler.InternalAccessToken)
 }

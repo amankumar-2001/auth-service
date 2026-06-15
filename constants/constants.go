@@ -8,6 +8,9 @@ const (
 	HeaderUserAgent     = "User-Agent"
 	HeaderForwardedFor  = "X-Forwarded-For"
 	HeaderRealIP        = "X-Real-Ip"
+	// HeaderInternalKey carries the shared secret for service-to-service calls to
+	// the /v1/internal routes (e.g. expense-service's WhatsApp worker).
+	HeaderInternalKey = "X-Internal-Key"
 )
 
 // Context keys for values stored by middleware. Using a dedicated type avoids

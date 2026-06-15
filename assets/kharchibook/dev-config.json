@@ -72,7 +72,13 @@
     "google": {
       "clientID": "",
       "clientSecret": "",
-      "redirectURL": "http://localhost:8080/auth/oauth/google/callback"
+      "redirectURL": "http://localhost:8080/auth/oauth/google/callback",
+      "gmailRedirectURL": "http://localhost:8080/v1/public/auth/google/gmail/callback",
+      "gmailConnectedURL": "http://localhost:3000/profile?gmail=connected"
     }
+  },
+  "internal": {
+    "apiKey": "",
+    "phoneHashKey": ""
   }
 }

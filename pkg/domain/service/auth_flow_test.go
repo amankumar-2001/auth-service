@@ -12,6 +12,7 @@ import (
 	"github.com/kharchibook/auth-service/pkg/domain/dto/message"
 	"github.com/kharchibook/auth-service/pkg/domain/dto/request"
 	"github.com/kharchibook/auth-service/pkg/domain/models/dao"
+	"github.com/kharchibook/auth-service/pkg/infrastructure/blindindex"
 	"github.com/kharchibook/auth-service/pkg/infrastructure/kms"
 	httptransport "github.com/kharchibook/auth-service/pkg/infrastructure/transport/http"
 )
@@ -65,6 +66,31 @@ func (r *fakeUserRepo) GetByProviderUID(_ context.Context, provider, uid string)
 		}
 	}
 	return nil, apperrors.ErrNotFound
+}
+func (r *fakeUserRepo) GetByPhoneHash(_ context.Context, phoneHash string) (*dao.User, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, u := range r.byID {
+		if u.PhoneHash != "" && u.PhoneHash == phoneHash {
+			cp := *u
+			return &cp, nil
+		}
+	}
+	return nil, apperrors.ErrNotFound
+}
+func (r *fakeUserRepo) SetPhoneHash(_ context.Context, id int64, phoneHash string) error {
+	return r.patch(id, func(u *dao.User) { u.PhoneHash = phoneHash })
+}
+func (r *fakeUserRepo) ListNeedingPhoneHash(_ context.Context) ([]dao.User, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var out []dao.User
+	for _, u := range r.byID {
+		if len(u.PhoneEncrypted) > 0 && u.PhoneHash == "" {
+			out = append(out, *u)
+		}
+	}
+	return out, nil
 }
 func (r *fakeUserRepo) Update(_ context.Context, u *dao.User) error {
 	r.mu.Lock()
@@ -303,7 +329,7 @@ func newTestAuthService(t *testing.T) (IAuthService, *capturePublisher) {
 	}
 	pub := &capturePublisher{}
 	rbac := NewRBACService(fakeRBACRepo{})
-	accounts := NewAccountService(newFakeUserRepo(), rbac, enc, 5, 15*time.Minute)
+	accounts := NewAccountService(newFakeUserRepo(), rbac, enc, blindindex.New("test-phone-key"), 5, 15*time.Minute)
 	tokens, err := NewTokenService(config.Token{
 		Issuer:          "auth-service-test",
 		AccessTokenTTL:  15 * time.Minute,

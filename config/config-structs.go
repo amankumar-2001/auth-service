@@ -16,6 +16,16 @@ type Config struct {
 	MsgQueue  MsgQueue  `mapstructure:"msgQueue"`
 	Email     Email     `mapstructure:"email"`
 	OAuth     OAuth     `mapstructure:"oauth"`
+	Internal  Internal  `mapstructure:"internal"`
+}
+
+// Internal holds service-to-service settings: the shared secret guarding the
+// /v1/internal routes, and the key for the phone blind index. Both are secrets
+// supplied via env overrides (INTERNAL_APIKEY, INTERNAL_PHONEHASHKEY) — never the
+// JSON config. Empty values fall back to fixed dev defaults.
+type Internal struct {
+	APIKey       string `mapstructure:"apiKey"`
+	PhoneHashKey string `mapstructure:"phoneHashKey"`
 }
 
 // App holds high-level service metadata.
@@ -122,11 +132,19 @@ type OAuth struct {
 	Google GoogleOAuth `mapstructure:"google"`
 }
 
-// GoogleOAuth holds Google OAuth 2.0 client settings.
+// GoogleOAuth holds Google OAuth 2.0 client settings. The same client is used
+// for social login and for Gmail connect (a separate, incremental consent with
+// the gmail.readonly scope and its own redirect/callback).
 type GoogleOAuth struct {
 	ClientID     string `mapstructure:"clientID"`
 	ClientSecret string `mapstructure:"clientSecret"`
 	RedirectURL  string `mapstructure:"redirectURL"`
+	// GmailRedirectURL is the callback Google returns to after the Gmail-connect
+	// consent (distinct from the login RedirectURL).
+	GmailRedirectURL string `mapstructure:"gmailRedirectURL"`
+	// GmailConnectedURL is where the browser is sent after a successful connect
+	// (the web app). Empty renders a plain success page instead.
+	GmailConnectedURL string `mapstructure:"gmailConnectedURL"`
 }
 
 // ResetTokenTTL is a fixed policy value (single-use password reset link lifetime).

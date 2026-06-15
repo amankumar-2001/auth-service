@@ -102,7 +102,7 @@ func (s *authService) SignUp(ctx context.Context, req request.SignUpRequest) (re
 		return response.SignUpResponse{}, apperrors.InternalServerError(err)
 	}
 
-	user, err := s.accounts.CreateLocalUser(ctx, req.Email, hash, req.Phone)
+	user, err := s.accounts.CreateLocalUser(ctx, req.Email, hash, req.Phone, req.Name)
 	if err != nil {
 		return response.SignUpResponse{}, err
 	}

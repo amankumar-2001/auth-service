@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"crypto/subtle"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -48,6 +49,23 @@ func (g *Guard) JWT(c *gin.Context) {
 	ctx = context.WithValue(ctx, constants.CtxVerified, claims.Verified)
 	c.Request = c.Request.WithContext(ctx)
 	c.Next()
+}
+
+// ServiceAuth returns middleware that authenticates trusted service-to-service
+// callers (e.g. expense-service's WhatsApp worker) via a shared secret in the
+// X-Internal-Key header, compared in constant time. An empty configured key
+// rejects all callers, so the internal routes fail closed if misconfigured.
+func (g *Guard) ServiceAuth(expectedKey string) gin.HandlerFunc {
+	want := []byte(expectedKey)
+	return func(c *gin.Context) {
+		got := []byte(c.Request.Header.Get(constants.HeaderInternalKey))
+		if len(want) == 0 || subtle.ConstantTimeCompare(got, want) != 1 {
+			utils.WriteError(c.Writer, apperrors.UnauthorizedError("invalid service credentials"))
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
 }
 
 // RequireVerified rejects users that have not completed OTP/email verification.

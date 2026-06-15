@@ -8,7 +8,12 @@ import "time"
 type User struct {
 	ID             int64      `gorm:"column:id;primaryKey;autoIncrement"`
 	Email          string     `gorm:"column:email;uniqueIndex;not null"`
+	Name           string     `gorm:"column:name;not null;default:''"`
 	PhoneEncrypted []byte     `gorm:"column:phone_encrypted"`
+	// PhoneHash is a keyed HMAC of the normalized phone (blind index). The phone
+	// itself is encrypted with a random nonce and cannot be queried; this column
+	// is what phone lookups (e.g. the WhatsApp worker) match against.
+	PhoneHash      string     `gorm:"column:phone_hash;index"`
 	PasswordHash   string     `gorm:"column:password_hash"`
 	Verified       bool       `gorm:"column:verified;not null;default:false"`
 	IsActive       bool       `gorm:"column:is_active;not null;default:true"`

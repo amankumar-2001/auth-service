@@ -19,8 +19,13 @@ type IUserRepository interface {
 	Create(ctx context.Context, u *dao.User) error
 	GetByEmail(ctx context.Context, email string) (*dao.User, error)
 	GetByID(ctx context.Context, id int64) (*dao.User, error)
+	GetByPhoneHash(ctx context.Context, phoneHash string) (*dao.User, error)
 	GetByProviderUID(ctx context.Context, provider, uid string) (*dao.User, error)
 	Update(ctx context.Context, u *dao.User) error
+	SetPhoneHash(ctx context.Context, id int64, phoneHash string) error
+	// ListNeedingPhoneHash returns users that have an encrypted phone but no blind
+	// index yet — the backfill work-list after the phone_hash column was added.
+	ListNeedingPhoneHash(ctx context.Context) ([]dao.User, error)
 	SetVerified(ctx context.Context, id int64, verified bool) error
 	RecordLoginSuccess(ctx context.Context, id int64, at time.Time) error
 	IncrementFailedAttempts(ctx context.Context, id int64) (int, error)
@@ -54,6 +59,27 @@ func (r *userRepository) GetByID(ctx context.Context, id int64) (*dao.User, erro
 	var u dao.User
 	err := r.db.WithContext(ctx).Preload("Roles").First(&u, id).Error
 	return mapUser(&u, err)
+}
+
+func (r *userRepository) GetByPhoneHash(ctx context.Context, phoneHash string) (*dao.User, error) {
+	var u dao.User
+	err := r.db.WithContext(ctx).Preload("Roles").Where("phone_hash = ?", phoneHash).First(&u).Error
+	return mapUser(&u, err)
+}
+
+func (r *userRepository) SetPhoneHash(ctx context.Context, id int64, phoneHash string) error {
+	return r.updateColumns(ctx, id, map[string]any{"phone_hash": phoneHash})
+}
+
+func (r *userRepository) ListNeedingPhoneHash(ctx context.Context) ([]dao.User, error) {
+	var users []dao.User
+	err := r.db.WithContext(ctx).
+		Where("phone_encrypted IS NOT NULL AND (phone_hash IS NULL OR phone_hash = '')").
+		Find(&users).Error
+	if err != nil {
+		return nil, fmt.Errorf("list users needing phone hash: %w", err)
+	}
+	return users, nil
 }
 
 func (r *userRepository) GetByProviderUID(ctx context.Context, provider, uid string) (*dao.User, error) {
