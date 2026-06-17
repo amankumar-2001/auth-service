@@ -45,13 +45,26 @@ func InitializeApp(cfg *config.Config) (AppInterface, error) {
 	resetRepo := cacherepo.NewResetTokenRepository(rdb)
 	rateLimitRepo := cacherepo.NewRateLimitRepository(rdb)
 
-	// Use the SMTP publisher when email is configured (Username set via env);
-	// otherwise fall back to the logging stub so local dev needs no provider.
-	var publisher msgqueuerepo.INotificationPublisher
+	// Pick the email transport(s) by what's configured, in priority order:
+	// Resend (HTTPS — works where outbound SMTP is blocked, e.g. Render free) is
+	// preferred; SMTP is the fallback. When both are set they're chained so a
+	// Resend failure falls back to SMTP. With neither, the logging stub keeps
+	// local dev provider-free.
+	var senders []msgqueuerepo.INotificationPublisher
+	if cfg.Resend.APIKey != "" {
+		senders = append(senders, msgqueuerepo.NewResendPublisher(cfg.Resend))
+	}
 	if cfg.Email.Host != "" && cfg.Email.Username != "" {
-		publisher = msgqueuerepo.NewSMTPPublisher(cfg.Email)
-	} else {
+		senders = append(senders, msgqueuerepo.NewSMTPPublisher(cfg.Email))
+	}
+	var publisher msgqueuerepo.INotificationPublisher
+	switch len(senders) {
+	case 0:
 		publisher = msgqueuerepo.NewStubPublisher()
+	case 1:
+		publisher = senders[0]
+	default:
+		publisher = msgqueuerepo.NewFallbackPublisher(senders...)
 	}
 	googleClient := httptransport.NewGoogleOAuthClient(cfg.OAuth.Google)
 	gmailClient := httptransport.NewGmailOAuthClient(cfg.OAuth.Google)

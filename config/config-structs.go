@@ -15,6 +15,7 @@ type Config struct {
 	RateLimit RateLimit `mapstructure:"rateLimit"`
 	MsgQueue  MsgQueue  `mapstructure:"msgQueue"`
 	Email     Email     `mapstructure:"email"`
+	Resend    Resend    `mapstructure:"resend"`
 	OAuth     OAuth     `mapstructure:"oauth"`
 	Internal  Internal  `mapstructure:"internal"`
 }
@@ -123,6 +124,19 @@ type Email struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	// From is the envelope/header sender address. Defaults to Username if empty.
+	From     string `mapstructure:"from"`
+	FromName string `mapstructure:"fromName"`
+}
+
+// Resend configures the Resend transactional-email API (https://resend.com),
+// delivered over HTTPS. This is the preferred sender on hosts that block
+// outbound SMTP (e.g. Render free instances block ports 25/465/587). When APIKey
+// is set the service prefers Resend and falls back to SMTP; APIKey is a secret
+// supplied via env (RESEND_APIKEY), never committed.
+type Resend struct {
+	APIKey string `mapstructure:"apiKey"`
+	// From is the sender address; its domain must be verified in Resend (or use
+	// the shared onboarding@resend.dev sandbox sender for first tests).
 	From     string `mapstructure:"from"`
 	FromName string `mapstructure:"fromName"`
 }

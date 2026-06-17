@@ -68,6 +68,11 @@
     "from": "",
     "fromName": "KharchiBook"
   },
+  "resend": {
+    "apiKey": "",
+    "from": "",
+    "fromName": "KharchiBook"
+  },
   "oauth": {
     "google": {
       "clientID": "",

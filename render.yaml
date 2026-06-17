@@ -22,13 +22,21 @@ services:
       - key: CACHE_TLS
         value: "true"             # Upstash requires TLS
       - key: MSGQUEUE_ENABLED
-        value: "false"            # no Kafka; OTP delivered via SMTP
+        value: "false"            # no Kafka; OTP delivered via Resend (HTTPS)
+      # Resend sender — Render blocks outbound SMTP, so email goes over the
+      # Resend HTTP API (port 443). RESEND_FROM's domain must be verified in
+      # Resend (or use onboarding@resend.dev for first tests).
+      - key: RESEND_FROM
+        value: ""                 # e.g. noreply@yourdomain.com — set once verified
       - key: TOKEN_PRIVATEKEYPATH
         value: /etc/secrets/jwt_private.pem
       - key: TOKEN_PUBLICKEYPATH
         value: /etc/secrets/jwt_public.pem
 
       # --- secrets: set these in the Render dashboard (Environment tab) ---
+      # Resend API key (https://resend.com → API Keys). Primary email transport.
+      - key: RESEND_APIKEY
+        sync: false
       # Postgres (Neon)
       - key: STORE_HOST
         sync: false
